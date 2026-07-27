@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -m pip list)",
+      "Bash(npx eslint *)",
+      "Bash(node -c frontend/src/components/ResultDisplay.jsx)",
+      "Bash(npm run *)",
+      "Bash(.venv/Scripts/python.exe -c \"import email_validator; print\\('email-validator OK', email_validator.__version__\\)\")",
+      "Bash(.venv/Scripts/python.exe -c \"import sqlalchemy, alembic, jwt, passlib; print\\('sqlalchemy', sqlalchemy.__version__\\); print\\('alembic', alembic.__version__\\)\")",
+      "Bash(.venv/Scripts/python.exe -c \"from app.main import app; print\\('app import OK'\\); print\\([r.path for r in app.routes]\\)\")",
+      "Bash(.venv/Scripts/python.exe -m pip list)"
+    ]
+  }
+}

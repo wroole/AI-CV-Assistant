@@ -1,0 +1,16 @@
+pymupdf
+ollama
+openai
+python-dotenv
+fastapi
+uvicorn
+python-multipart
+
+sqlalchemy>=2.0
+psycopg2-binary>=2.9
+alembic>=1.13
+
+passlib[bcrypt]>=1.7
+pyjwt>=2.8
+
+stripe>=8.0

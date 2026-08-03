@@ -1,25 +1,31 @@
-"""Auth-related request/response schemas."""
 from datetime import datetime
+from typing import Annotated
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, BeforeValidator, ConfigDict, EmailStr, Field
+
+
+def _normalize_email(value: str) -> str:
+    if not isinstance(value, str):
+        return value
+    return value.strip().lower()
+
+
+EmailInput = Annotated[EmailStr, BeforeValidator(_normalize_email)]
 
 
 class UserCreate(BaseModel):
-    """Registration payload."""
-    email: EmailStr
+    email: EmailInput
     password: str = Field(min_length=8, max_length=128)
     full_name: str | None = Field(default=None, max_length=100)
 
 
 class UserLogin(BaseModel):
-    """Login payload."""
-    email: EmailStr
+    email: EmailInput
     password: str
 
 
 class UserOut(BaseModel):
-    """User data returned to the client. Never includes the password hash."""
     model_config = ConfigDict(from_attributes=True)
 
     id: UUID
@@ -31,7 +37,6 @@ class UserOut(BaseModel):
 
 
 class Token(BaseModel):
-    """Access + refresh token pair returned after login/register."""
     access_token: str
     refresh_token: str
     token_type: str = "bearer"

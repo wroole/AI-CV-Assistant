@@ -1,29 +1,26 @@
 # AI CV Assistant Frontend
 
-This is a React frontend for the AI CV Assistant backend. It provides two modes:
-1. **Candidate Mode**: Upload a CV (PDF) to get an analysis (score, strengths, weaknesses, recommendations, etc.)
-2. **HR Mode**: Upload a CV (PDF) and provide a job description to get a match analysis.
+A React (Vite) frontend for the AI CV Assistant backend. It includes user
+authentication, a CV analysis workspace (Candidate + HR modes), and a
+subscription page with a simulated purchase flow.
 
 ## Prerequisites
 
-- Node.js (>=16) and npm (or yarn)
-- The backend API running (see backend README for setup)
+- Node.js (>=16) and npm
+- The backend API running (see the backend README for setup)
 
 ## Installation
 
-1. Navigate to the frontend directory:
-   ```bash
-   cd frontend
-   ```
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
+```bash
+cd frontend
+npm install
+```
 
 ## Configuration
 
-The frontend is configured to proxy API requests to `http://localhost:8000` (the default backend URL) during development.
-If your backend runs on a different URL, update `vite.config.js`:
+The frontend proxies `/api` requests to `http://localhost:8000` (the default
+backend URL) during development. If your backend runs elsewhere, update
+`vite.config.js`:
 
 ```javascript
 server: {
@@ -39,55 +36,72 @@ server: {
 
 ## Development
 
-Start the development server:
 ```bash
 npm run dev
 ```
-The app will be available at `http://localhost:5173`.
+
+The app is available at `http://localhost:5173`.
 
 ## Building for Production
 
-To create a production build:
 ```bash
 npm run build
 ```
-The output will be in the `dist` directory.
 
-## Usage
+The output is in the `dist` directory.
 
-1. Ensure the backend is running (default: `http://localhost:8000`).
-2. Start the frontend dev server (`npm run dev`).
-3. Open `http://localhost:5173` in your browser.
-4. Choose between Candidate Mode and HR Mode.
-5. Upload a PDF CV (and for HR mode, provide a job description).
-6. Click the analyze button and view the results.
+## Architecture
+
+- **Routing**: `react-router-dom` v6. `/login` and `/register` are public;
+  `/` (analyze) and `/subscription` are protected by `ProtectedRoute`, which
+  redirects unauthenticated users to `/login` while remembering their
+  destination.
+- **Auth**: `AuthContext` (`src/context/AuthContext.jsx`) owns the current
+  user. On first load it hydrates the session from stored tokens (with a
+  single refresh attempt on an expired access token). Login/register store
+  access + refresh JWTs in `localStorage`.
+- **API client**: `src/api/index.js` attaches the bearer token to every
+  request and transparently refreshes it on a `401` (exactly once, then logs
+  out). All app requests go through `apiGet` / `apiPostForm` so the token is
+  always attached.
 
 ## Features
 
-- File validation (PDF only, size limit handled by backend)
-- Loading states
-- Error handling
-- Display of LLM analysis and deterministic basic scores
-- Responsive design
-
-## Notes
-
-- The frontend uses Vite for fast development builds.
-- It uses React hooks for state management.
-- Styling is done with plain CSS for simplicity.
+- **Authentication**: register, login, logout, protected routes.
+- **Candidate Mode**: upload a CV (PDF) for an analysis (score, strengths,
+  weaknesses, recommendations).
+- **HR Mode**: upload a CV (PDF) and a job description (text, URL, or PDF) for
+  a candidate-fit analysis.
+- **Subscription**: view plans and the current subscription. A "Simulate
+  purchase" button grants a plan with no real payment processing.
+- Loading states, error handling, and a responsive design.
 
 ## Backend Integration
 
-The frontend communicates with the following endpoints:
-- `POST /api/v1/analyze-resume` (Candidate Mode)
-- `POST /api/v1/hr/analyze-candidate` (HR Mode)
+The frontend uses these endpoints:
 
-Make sure the backend is running and accessible from the frontend (CORS is configured in the backend).
+| Endpoint | Auth | Purpose |
+|---|---|---|
+| `POST /api/v1/auth/register` | public | create account, returns tokens |
+| `POST /api/v1/auth/login` | public | sign in, returns tokens |
+| `POST /api/v1/auth/refresh` | public | refresh the token pair |
+| `GET  /api/v1/auth/me` | required | current user |
+| `POST /api/v1/analyze-resume` | required | Candidate CV analysis |
+| `POST /api/v1/hr/analyze-candidate` | required | HR candidate analysis |
+| `GET  /api/v1/subscriptions/plans` | public | plan catalog |
+| `GET  /api/v1/subscriptions/me` | required | current subscription |
+| `POST /api/v1/subscriptions/subscribe` | required | simulate purchase |
+| `POST /api/v1/subscriptions/cancel` | required | cancel subscription |
 
 ## Troubleshooting
 
-- If you see CORS errors, ensure the backend CORS middleware includes the frontend origin.
-- If the API calls fail, check the browser console and backend logs.
-- For file upload issues, verify the file is a PDF and within the size limit set in the backend.
+- If API calls fail with `401`, sign in — the analysis endpoints now require
+  authentication.
+- If you see CORS errors, ensure the backend CORS middleware includes the
+  frontend origin (`http://localhost:5173`).
+- For file upload issues, verify the file is a PDF and within the 10 MB limit.
 
-Enjoy using the AI CV Assistant!
+## Notes
+
+- Vite for development builds, plain CSS for styling (no UI framework).
+- React hooks for state; `react-router-dom` for navigation.

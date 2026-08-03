@@ -3,9 +3,6 @@ import re
 
 
 def calculate_basic_score(text: str) -> dict:
-    """
-    Calculate a transparent, deterministic CV score from section and content signals.
-    """
     if not text or not text.strip():
         return {"total_score": 0, "details": {"reason": "Empty text"}}
 

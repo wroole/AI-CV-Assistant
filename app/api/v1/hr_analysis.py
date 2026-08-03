@@ -1,9 +1,18 @@
 from pathlib import Path
 from uuid import uuid4
 
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 
+from app.core.deps import get_current_user
+from app.core.database import get_db
+from app.models.user import User
 from app.services.hr_analysis_service import analyze_candidate_pdf_for_hr
+from app.services.usage_service import (
+    ProviderNotAllowedError,
+    UsageError,
+    UsageExceededError,
+    check_and_record,
+)
 
 
 router = APIRouter(prefix="/api/v1/hr", tags=["hr"])
@@ -17,6 +26,8 @@ async def analyze_candidate_for_hr_endpoint(
     job_description_url: str = Form(""),
     job_description_file: UploadFile = File(None),
     provider: str = Form("local"),
+    current_user: User = Depends(get_current_user),
+    db=Depends(get_db),
 ):
     if provider not in ["local", "api"]:
         raise HTTPException(status_code=400, detail="provider must be 'local' or 'api'")
@@ -35,6 +46,15 @@ async def analyze_candidate_for_hr_endpoint(
         raise HTTPException(status_code=400, detail="Use only one job description source")
     if jd_file is not None and not (jd_file.filename or "").lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF files are supported for job description")
+
+    try:
+        check_and_record(current_user, db, kind="hr", provider=provider)
+    except ProviderNotAllowedError as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
+    except UsageExceededError as error:
+        raise HTTPException(status_code=403, detail=str(error)) from error
+    except UsageError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
 
     uploads_dir = Path("storage/uploads")
     uploads_dir.mkdir(parents=True, exist_ok=True)

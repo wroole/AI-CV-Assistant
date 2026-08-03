@@ -16,7 +16,7 @@ from app.services.resume_analysis_service import MAX_CV_CHARS, parse_llm_json
 
 
 MAX_JOB_DESCRIPTION_BYTES = 10 * 1024 * 1024
-MAX_URL_TEXT_CHARS = 12000
+MAX_URL_TEXT_CHARS = 50000
 
 SKILL_FILLER_WORDS = {
     "a",

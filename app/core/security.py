@@ -1,14 +1,9 @@
-"""Password hashing and JWT helpers.
-
-These are the Python (FastAPI) equivalents of what you'd build in Spring
-Security with ``BCryptPasswordEncoder`` and ``JwtUtil``.
-"""
 from datetime import datetime, timedelta, timezone
 from typing import Any
 from uuid import UUID
 
+import bcrypt
 import jwt
-from passlib.context import CryptContext
 
 from app.core.config import (
     ACCESS_TOKEN_EXPIRE_MINUTES,
@@ -18,20 +13,23 @@ from app.core.config import (
 )
 
 
-# BCrypt is the same algorithm used by Spring Security's BCryptPasswordEncoder.
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+_BCRYPT_MAX_BYTES = 72
+
+
+def _encode_password(plain: str) -> bytes:
+    return plain.encode("utf-8")[:_BCRYPT_MAX_BYTES]
 
 
 def hash_password(plain: str) -> str:
-    """Hash a password for storage. Equivalent to
-    ``BCryptPasswordEncoder.encode(...)``.
-    """
-    return pwd_context.hash(plain)
+    salt = bcrypt.gensalt()
+    return bcrypt.hashpw(_encode_password(plain), salt).decode("utf-8")
 
 
 def verify_password(plain: str, hashed: str) -> bool:
-    """Return True if ``plain`` matches the stored ``hashed`` value."""
-    return pwd_context.verify(plain, hashed)
+    try:
+        return bcrypt.checkpw(_encode_password(plain), hashed.encode("utf-8"))
+    except (ValueError, TypeError):
+        return False
 
 
 def create_access_token(
@@ -39,7 +37,6 @@ def create_access_token(
     expires_minutes: int = ACCESS_TOKEN_EXPIRE_MINUTES,
     extra_claims: dict[str, Any] | None = None,
 ) -> str:
-    """Create a short-lived access JWT. ``subject`` is the user id (sub claim)."""
     now = datetime.now(timezone.utc)
     payload: dict[str, Any] = {
         "sub": str(subject),
@@ -56,9 +53,6 @@ def create_refresh_token(
     subject: str | UUID,
     expires_days: int = REFRESH_TOKEN_EXPIRE_DAYS,
 ) -> str:
-    """Create a long-lived refresh JWT. The client sends this back to obtain
-    a new access token without re-entering the password.
-    """
     now = datetime.now(timezone.utc)
     payload: dict[str, Any] = {
         "sub": str(subject),
@@ -70,7 +64,4 @@ def create_refresh_token(
 
 
 def decode_token(token: str) -> dict[str, Any]:
-    """Decode and verify a JWT. Raises ``jwt.PyJWTError`` on invalid/expired
-    tokens (caught in the dependency below).
-    """
     return jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])

@@ -1,7 +1,3 @@
-"""User registration + authentication business logic.
-
-Equivalent to a Spring ``UserService`` backed by a ``UserRepository``.
-"""
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -19,11 +15,10 @@ from app.schemas.auth import Token, UserCreate, UserOut
 
 
 class AuthError(Exception):
-    """Raised for expected business errors, mapped to HTTP 400/401 in the router."""
+    pass
 
 
 def register_user(payload: UserCreate, db: Session) -> Token:
-    """Create a new user, default them to the Free plan, and return tokens."""
     existing = db.scalars(select(User).where(User.email == payload.email)).first()
     if existing:
         raise AuthError("An account with this email already exists")
@@ -36,9 +31,8 @@ def register_user(payload: UserCreate, db: Session) -> Token:
         is_active=True,
     )
     db.add(user)
-    db.flush()  # populate user.id without committing (we may still raise)
+    db.flush()
 
-    # Every new user gets the Free plan on signup.
     free_plan = db.scalars(
         select(SubscriptionPlan).where(SubscriptionPlan.name == "free")
     ).first()
@@ -58,10 +52,8 @@ def register_user(payload: UserCreate, db: Session) -> Token:
 
 
 def authenticate_user(email: str, password: str, db: Session) -> Token:
-    """Verify credentials and return a fresh token pair."""
     user = db.scalars(select(User).where(User.email == email)).first()
     if not user or not verify_password(password, user.password_hash):
-        # Same message for "no such user" and "wrong password" — do not leak.
         raise AuthError("Incorrect email or password")
     if not user.is_active:
         raise AuthError("This account has been deactivated")
@@ -70,10 +62,9 @@ def authenticate_user(email: str, password: str, db: Session) -> Token:
 
 
 def refresh_access_token(refresh_token: str, db: Session) -> Token:
-    """Validate a refresh token and issue a new token pair."""
     try:
         payload = decode_token(refresh_token)
-    except Exception as error:  # jwt.PyJWTError + others
+    except Exception as error:
         raise AuthError("Invalid or expired refresh token") from error
 
     if payload.get("type") != "refresh":

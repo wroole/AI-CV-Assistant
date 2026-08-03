@@ -10,7 +10,6 @@ sqlalchemy>=2.0
 psycopg2-binary>=2.9
 alembic>=1.13
 
-passlib[bcrypt]>=1.7
+bcrypt>=4.0
 pyjwt>=2.8
-
-stripe>=8.0
+email-validator>=2.0

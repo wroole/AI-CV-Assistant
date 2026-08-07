@@ -8,10 +8,10 @@ from urllib.parse import urlsplit
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 from app.llm.llm_analyzer import analyze_candidate_for_hr
-from app.ml.cleaner import clean_text
-from app.ml.pdf_extractor import extract_text_from_pdf
-from app.ml.resume_features import extract_resume_features
-from app.ml.scoring import calculate_basic_score
+from app.processing.cleaner import clean_text
+from app.processing.pdf_extractor import extract_text_from_pdf
+from app.processing.resume_features import extract_resume_features
+from app.processing.scoring import calculate_basic_score
 from app.services.resume_analysis_service import MAX_CV_CHARS, parse_llm_json
 
 

@@ -2,10 +2,10 @@ import json
 from pathlib import Path
 
 from app.llm.llm_analyzer import analyze_cv
-from app.ml.cleaner import clean_text
-from app.ml.pdf_extractor import extract_text_from_pdf
-from app.ml.resume_features import extract_resume_features
-from app.ml.scoring import calculate_basic_score
+from app.processing.cleaner import clean_text
+from app.processing.pdf_extractor import extract_text_from_pdf
+from app.processing.resume_features import extract_resume_features
+from app.processing.scoring import calculate_basic_score
 
 
 MAX_CV_CHARS = 8000

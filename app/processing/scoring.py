@@ -1,4 +1,4 @@
-from app.ml.resume_features import count_bullets
+from app.processing.resume_features import count_bullets
 import re
 
 

@@ -6,8 +6,8 @@ sys.path.append(str(PROJECT_ROOT))
 
 from app.core.config import LLM_PROVIDER
 from app.llm.llm_analyzer import analyze_cv
-from app.ml.cleaner import clean_text
-from app.ml.pdf_extractor import extract_text_from_pdf
+from app.processing.cleaner import clean_text
+from app.processing.pdf_extractor import extract_text_from_pdf
 
 
 pdf_path = "datasets/data/ACCOUNTANT/10554236.pdf"

@@ -20,6 +20,8 @@ storage/
 
 datasets/
 
+tests/
+
 .vscode/
 .idea/
 .claude/
